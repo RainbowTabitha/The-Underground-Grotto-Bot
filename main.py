@@ -197,27 +197,6 @@ gamesIMG = {
     8: "assets/MP8.png"
 }
 
-GAME_MODES = {
-    "normal": [
-        "Mario Party: Magic Conch",
-        "Mario Party: Simon Says", 
-        "Mario Party: Raiders Wrath",
-        "Mario Party: Inversal Reversal"
-    ],
-    "mayhem": [
-        "Mario Party Mayhem: Classic",
-        "Mario Party Mayhem: Modern",
-        "Mario Party Mayhem: Magic Conch",
-        "Mario Party Mayhem: Mayhem Says",
-        "Mario Party Mayhem: Raiders Wrath",
-        "Mario Party Mayhem: Inversal Reversal"
-    ]
-}
-
-GAME_IMAGES = {
-    i: f"assets/MP{i}.png" for i in range(1, 9)
-}
-
 COMMANDS_LIST = [
     "$board1", "$board2", "$board3", "$board4", "$board5", "$board6", "$board7", "$board8",
     "$bonusstars", "$commands", "$duels", "$gentlemans", "$pickgame", "$pickgcwii", 
