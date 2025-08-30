@@ -1,17 +1,11 @@
 import discord
 import logging
 import os
-import asyncio
-import random
-from datetime import datetime
 from dotenv import load_dotenv
-from wheel import generate_wheel_gif, spin_wheel_and_show_result
 from wheel import generate_wheel_gif, spin_wheel_and_show_result
 
 # Load environment variables
-# Load environment variables
 load_dotenv()
-TOKEN = os.getenv("DISCORD_TOKEN")
 TOKEN = os.getenv("DISCORD_TOKEN")
 
 # Bot setup
@@ -29,6 +23,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger('UndergroundGrottoBot')
 
+
 def get_commands_list():
     """Automatically generate the list of available slash commands."""
     commands = []
@@ -38,8 +33,10 @@ def get_commands_list():
                 commands.append(f"/{cmd.name}")
     return sorted(commands)
 
+
 # Initialize empty commands list (will be populated after bot sync)
 COMMANDS_LIST = []
+
 
 def get_board_key_by_value(board_dict, value):
     """Get the key for a given board value."""
@@ -47,6 +44,7 @@ def get_board_key_by_value(board_dict, value):
         if val == value:
             return key
     return None
+
 
 # Bot events
 @bot.event
@@ -56,10 +54,9 @@ async def on_ready():
     print(f'🆔 Bot ID: {bot.user.id}')
     print(f'📊 Connected to {len(bot.guilds)} guild(s)')
     print(f'👥 Serving {len(bot.users)} user(s)')
-    
+
     try:
         synced = await bot.sync_commands()
-        # Handle different return types from sync_commands()
         if synced is not None and hasattr(synced, '__len__'):
             logger.info(f"Synced {len(synced)} command(s)")
             print(f"✅ Synced {len(synced)} command(s)")
@@ -73,21 +70,21 @@ async def on_ready():
         logger.error(f"Failed to sync commands: {e}")
         print(f"❌ Failed to sync commands: {e}")
 
+
 @bot.event
 async def on_guild_join(guild):
-    """Log when bot joins a new guild"""
     logger.info(f"Joined guild: {guild.name} (ID: {guild.id})")
     print(f"🎉 Joined new guild: {guild.name}")
 
+
 @bot.event
 async def on_guild_remove(guild):
-    """Log when bot leaves a guild"""
     logger.info(f"Left guild: {guild.name} (ID: {guild.id})")
     print(f"👋 Left guild: {guild.name}")
 
+
 @bot.event
 async def on_command_error(ctx, error):
-    """Global error handler"""
     if isinstance(error, discord.ApplicationCommandInvokeError):
         logger.error(f"Command error in {ctx.command}: {error.original}")
         await ctx.respond(f"❌ An error occurred: {str(error.original)}", ephemeral=True)
@@ -95,456 +92,174 @@ async def on_command_error(ctx, error):
         logger.error(f"Unexpected error: {error}")
         await ctx.respond("❌ An unexpected error occurred.", ephemeral=True)
 
+
 # Board selection commands
-@bot.slash_command(name="board1", description="Selects a random Mario Party 1 board using the wheel.")
+@bot.slash_command(name="board1", description="Random Mario Party 1 board")
 async def board1(ctx):
-    """Selects a random Mario Party 1 board using the wheel."""
-    boards1 = ["DK's Jungle Adventure", "Peach's Birthday Cake", "Yoshi's Tropical Island", "Wario's Battle Canyon", "Luigi's Engine Room", "Mario's Rainbow Castle", "Bowser's Magma Mountain", "Eternal Star"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, boards1)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=boards1,
-        title="🎯 Mario Party 1 Board Selected!",
-        description="MP1 board",
-        image_path=f"assets/{selected}.png",
-        filename=f"{selected}.png"
-    )
+    boards = [
+        "DK's Jungle Adventure", "Peach's Birthday Cake", "Yoshi's Tropical Island",
+        "Wario's Battle Canyon", "Luigi's Engine Room", "Mario's Rainbow Castle",
+        "Bowser's Magma Mountain", "Eternal Star"
+    ]
+    selected, gif_io, _ = generate_wheel_gif(ctx, boards)
+    await spin_wheel_and_show_result(ctx, boards, "🎯 Mario Party 1 Board Selected!", "MP1 board",
+                                     f"assets/{selected}.png", f"{selected}.png")
 
-@bot.slash_command(name="board2", description="Selects a random Mario Party 2 board using the wheel.")
-    """Selects a random Mario Party 1 board using the wheel."""
-    boards1 = ["DK's Jungle Adventure", "Peach's Birthday Cake", "Yoshi's Tropical Island", "Wario's Battle Canyon", "Luigi's Engine Room", "Mario's Rainbow Castle", "Bowser's Magma Mountain", "Eternal Star"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, boards1)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=boards1,
-        title="🎯 Mario Party 1 Board Selected!",
-        description="MP1 board",
-        image_path=f"assets/{selected}.png",
-        filename=f"{selected}.png"
-    )
 
-@bot.slash_command(name="board2", description="Selects a random Mario Party 2 board using the wheel.")
+@bot.slash_command(name="board2", description="Random Mario Party 2 board")
 async def board2(ctx):
-    """Selects a random Mario Party 2 board using the wheel."""
-    boards2 = ["Pirate Land", "Western Land", "Space Land", "Mystery Land", "Horror Land", "Bowser Land"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, boards2)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=boards2,
-        title="🎯 Mario Party 2 Board Selected!",
-        description="MP2 board",
-        image_path=f"assets/{selected}.png",
-        filename=f"{selected}.png"
-    )
+    boards = ["Pirate Land", "Western Land", "Space Land", "Mystery Land", "Horror Land", "Bowser Land"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, boards)
+    await spin_wheel_and_show_result(ctx, boards, "🎯 Mario Party 2 Board Selected!", "MP2 board",
+                                     f"assets/{selected}.png", f"{selected}.png")
 
-@bot.slash_command(name="board3", description="Selects a random Mario Party 3 board using the wheel.")
-    """Selects a random Mario Party 2 board using the wheel."""
-    boards2 = ["Pirate Land", "Western Land", "Space Land", "Mystery Land", "Horror Land", "Bowser Land"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, boards2)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=boards2,
-        title="🎯 Mario Party 2 Board Selected!",
-        description="MP2 board",
-        image_path=f"assets/{selected}.png",
-        filename=f"{selected}.png"
-    )
 
-@bot.slash_command(name="board3", description="Selects a random Mario Party 3 board using the wheel.")
+@bot.slash_command(name="board3", description="Random Mario Party 3 board")
 async def board3(ctx):
-    """Selects a random Mario Party 3 board using the wheel."""
-    boards3 = ["Chilly Waters", "Deep Bloober Sea", "Spiny Desert", "Woody Woods", "Creepy Cavern", "Waluigi's Island"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, boards3)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=boards3,
-        title="🎯 Mario Party 3 Board Selected!",
-        description="MP3 board",
-        image_path=f"assets/{selected}.png",
-        filename=f"{selected}.png"
-    )
+    boards = ["Chilly Waters", "Deep Bloober Sea", "Spiny Desert", "Woody Woods", "Creepy Cavern", "Waluigi's Island"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, boards)
+    await spin_wheel_and_show_result(ctx, boards, "🎯 Mario Party 3 Board Selected!", "MP3 board",
+                                     f"assets/{selected}.png", f"{selected}.png")
 
-@bot.slash_command(name="board4", description="Selects a random Mario Party 4 board using the wheel.")
-    """Selects a random Mario Party 3 board using the wheel."""
-    boards3 = ["Chilly Waters", "Deep Bloober Sea", "Spiny Desert", "Woody Woods", "Creepy Cavern", "Waluigi's Island"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, boards3)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=boards3,
-        title="🎯 Mario Party 3 Board Selected!",
-        description="MP3 board",
-        image_path=f"assets/{selected}.png",
-        filename=f"{selected}.png"
-    )
 
-@bot.slash_command(name="board4", description="Selects a random Mario Party 4 board using the wheel.")
+@bot.slash_command(name="board4", description="Random Mario Party 4 board")
 async def board4(ctx):
-    """Selects a random Mario Party 4 board using the wheel."""
-    boards4 = ["Toad's Midway Madness", "Shy Guy's Jungle Jam", "Goomba's Greedy Gala", "Boo's Haunted Bash", "Koopa's Seaside Soiree", "Bowser's Gnarly Party"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, boards4)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=boards4,
-        title="🎯 Mario Party 4 Board Selected!",
-        description="MP4 board",
-        image_path=f"assets/{selected}.png",
-        filename=f"{selected}.png"
-    )
+    boards = ["Toad's Midway Madness", "Shy Guy's Jungle Jam", "Goomba's Greedy Gala",
+              "Boo's Haunted Bash", "Koopa's Seaside Soiree", "Bowser's Gnarly Party"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, boards)
+    await spin_wheel_and_show_result(ctx, boards, "🎯 Mario Party 4 Board Selected!", "MP4 board",
+                                     f"assets/{selected}.png", f"{selected}.png")
 
-@bot.slash_command(name="board5", description="Selects a random Mario Party 5 board using the wheel.")
-    """Selects a random Mario Party 4 board using the wheel."""
-    boards4 = ["Toad's Midway Madness", "Shy Guy's Jungle Jam", "Goomba's Greedy Gala", "Boo's Haunted Bash", "Koopa's Seaside Soiree", "Bowser's Gnarly Party"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, boards4)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=boards4,
-        title="🎯 Mario Party 4 Board Selected!",
-        description="MP4 board",
-        image_path=f"assets/{selected}.png",
-        filename=f"{selected}.png"
-    )
 
-@bot.slash_command(name="board5", description="Selects a random Mario Party 5 board using the wheel.")
+@bot.slash_command(name="board5", description="Random Mario Party 5 board")
 async def board5(ctx):
-    """Selects a random Mario Party 5 board using the wheel."""
-    boards5 = ["Toy Dream", "Rainbow Dream", "Pirate Dream", "Undersea Dream", "Future Dream", "Sweet Dream", "Bowser's Nightmare"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, boards5)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=boards5,
-        title="🎯 Mario Party 5 Board Selected!",
-        description="MP5 board",
-        image_path=f"assets/{selected}.png",
-        filename=f"{selected}.png"
-    )
+    boards = ["Toy Dream", "Rainbow Dream", "Pirate Dream", "Undersea Dream", "Future Dream", "Sweet Dream", "Bowser's Nightmare"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, boards)
+    await spin_wheel_and_show_result(ctx, boards, "🎯 Mario Party 5 Board Selected!", "MP5 board",
+                                     f"assets/{selected}.png", f"{selected}.png")
 
-@bot.slash_command(name="board6", description="Selects a random Mario Party 6 board using the wheel.")
-    """Selects a random Mario Party 5 board using the wheel."""
-    boards5 = ["Toy Dream", "Rainbow Dream", "Pirate Dream", "Undersea Dream", "Future Dream", "Sweet Dream", "Bowser's Nightmare"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, boards5)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=boards5,
-        title="🎯 Mario Party 5 Board Selected!",
-        description="MP5 board",
-        image_path=f"assets/{selected}.png",
-        filename=f"{selected}.png"
-    )
 
-@bot.slash_command(name="board6", description="Selects a random Mario Party 6 board using the wheel.")
+@bot.slash_command(name="board6", description="Random Mario Party 6 board")
 async def board6(ctx):
-    """Selects a random Mario Party 6 board using the wheel."""
-    boards6 = ["Towering Treetop", "E.Gadd's Garage", "Faire Square", "Snowflake Lake", "Castaway Bay", "Clockwork Castle"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, boards6)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=boards6,
-        title="🎯 Mario Party 6 Board Selected!",
-        description="MP6 board",
-        image_path=f"assets/{selected}.png",
-        filename=f"{selected}.png"
-    )
+    boards = ["Towering Treetop", "E.Gadd's Garage", "Faire Square", "Snowflake Lake", "Castaway Bay", "Clockwork Castle"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, boards)
+    await spin_wheel_and_show_result(ctx, boards, "🎯 Mario Party 6 Board Selected!", "MP6 board",
+                                     f"assets/{selected}.png", f"{selected}.png")
 
-@bot.slash_command(name="board7", description="Selects a random Mario Party 7 board using the wheel.")
-    """Selects a random Mario Party 6 board using the wheel."""
-    boards6 = ["Towering Treetop", "E.Gadd's Garage", "Faire Square", "Snowflake Lake", "Castaway Bay", "Clockwork Castle"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, boards6)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=boards6,
-        title="🎯 Mario Party 6 Board Selected!",
-        description="MP6 board",
-        image_path=f"assets/{selected}.png",
-        filename=f"{selected}.png"
-    )
 
-@bot.slash_command(name="board7", description="Selects a random Mario Party 7 board using the wheel.")
+@bot.slash_command(name="board7", description="Random Mario Party 7 board")
 async def board7(ctx):
-    """Selects a random Mario Party 7 board using the wheel."""
-    boards7 = ["Grand Canal", "Pagoda Peak", "Pyramid Park", "Neon Heights", "Windmillville", "Bowser's Enchanted Inferno"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, boards7)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=boards7,
-        title="🎯 Mario Party 7 Board Selected!",
-        description="MP7 board",
-        image_path=f"assets/{selected}.png",
-        filename=f"{selected}.png"
-    )
+    boards = ["Grand Canal", "Pagoda Peak", "Pyramid Park", "Neon Heights", "Windmillville", "Bowser's Enchanted Inferno"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, boards)
+    await spin_wheel_and_show_result(ctx, boards, "🎯 Mario Party 7 Board Selected!", "MP7 board",
+                                     f"assets/{selected}.png", f"{selected}.png")
 
-@bot.slash_command(name="board8", description="Selects a random Mario Party 8 board using the wheel.")
-    """Selects a random Mario Party 7 board using the wheel."""
-    boards7 = ["Grand Canal", "Pagoda Peak", "Pyramid Park", "Neon Heights", "Windmillville", "Bowser's Enchanted Inferno"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, boards7)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=boards7,
-        title="🎯 Mario Party 7 Board Selected!",
-        description="MP7 board",
-        image_path=f"assets/{selected}.png",
-        filename=f"{selected}.png"
-    )
 
-@bot.slash_command(name="board8", description="Selects a random Mario Party 8 board using the wheel.")
+@bot.slash_command(name="board8", description="Random Mario Party 8 board")
 async def board8(ctx):
-    """Selects a random Mario Party 8 board using the wheel."""
-    boards8 = ["DK's Treetop Temple", "Goomba's Booty Boardwalk", "King Boo's Haunted Hideaway", "Shy Guy's Perplex Express", "Koopa's Tycoon Town", "Bowser's Warped Orbit"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, boards8)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=boards8,
-        title="🎯 Mario Party 8 Board Selected!",
-        description="MP8 board",
-        image_path=f"assets/{selected}.png",
-        filename=f"{selected}.png"
-    )
+    boards = ["DK's Treetop Temple", "Goomba's Booty Boardwalk", "King Boo's Haunted Hideaway",
+              "Shy Guy's Perplex Express", "Koopa's Tycoon Town", "Bowser's Warped Orbit"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, boards)
+    await spin_wheel_and_show_result(ctx, boards, "🎯 Mario Party 8 Board Selected!", "MP8 board",
+                                     f"assets/{selected}.png", f"{selected}.png")
+
 
 # Game selection commands
-@bot.slash_command(name="pickgame", description="Selects a random Mario Party game using the wheel.")
-    """Selects a random Mario Party 8 board using the wheel."""
-    boards8 = ["DK's Treetop Temple", "Goomba's Booty Boardwalk", "King Boo's Haunted Hideaway", "Shy Guy's Perplex Express", "Koopa's Tycoon Town", "Bowser's Warped Orbit"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, boards8)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=boards8,
-        title="🎯 Mario Party 8 Board Selected!",
-        description="MP8 board",
-        image_path=f"assets/{selected}.png",
-        filename=f"{selected}.png"
-    )
-
-# Game selection commands
-@bot.slash_command(name="pickgame", description="Selects a random Mario Party game using the wheel.")
+@bot.slash_command(name="pickgame", description="Random Mario Party game")
 async def pickgame(ctx):
-    """Selects a random Mario Party game using the wheel."""
-    game_names = [f"Mario Party {i}" for i in range(1, 9)]
-    selected, gif_io, _ = generate_wheel_gif(ctx, game_names)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=game_names,
-        title="🎮 Mario Party Game Selected!",
-        description="Mario Party game",
-        image_path=f"assets/MP{int(selected.split()[-1])}.png",
-        filename=f"MP{int(selected.split()[-1])}.png"
-    )
+    games = [f"Mario Party {i}" for i in range(1, 9)]
+    selected, gif_io, _ = generate_wheel_gif(ctx, games)
+    await spin_wheel_and_show_result(ctx, games, "🎮 Mario Party Game Selected!", "Mario Party game",
+                                     f"assets/MP{int(selected.split()[-1])}.png", f"MP{int(selected.split()[-1])}.png")
 
-@bot.slash_command(name="pickgcwii", description="Selects a random GameCube/Wii Mario Party game using the wheel.")
-    """Selects a random Mario Party game using the wheel."""
-    game_names = [f"Mario Party {i}" for i in range(1, 9)]
-    selected, gif_io, _ = generate_wheel_gif(ctx, game_names)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=game_names,
-        title="🎮 Mario Party Game Selected!",
-        description="Mario Party game",
-        image_path=f"assets/MP{int(selected.split()[-1])}.png",
-        filename=f"MP{int(selected.split()[-1])}.png"
-    )
 
-@bot.slash_command(name="pickgcwii", description="Selects a random GameCube/Wii Mario Party game using the wheel.")
+@bot.slash_command(name="pickgcwii", description="Random GC/Wii Mario Party game")
 async def pickgcwii(ctx):
-    """Selects a random GameCube/Wii Mario Party game using the wheel."""
-    game_names = [f"Mario Party {i}" for i in range(4, 9)]
-    selected, gif_io, _ = generate_wheel_gif(ctx, game_names)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=game_names,
-        title="🎮 GC/Wii Mario Party Game Selected!",
-        description="GC/Wii Mario Party game",
-        image_path=f"assets/MP{int(selected.split()[-1])}.png",
-        filename=f"MP{int(selected.split()[-1])}.png"
-    )
+    games = [f"Mario Party {i}" for i in range(4, 9)]
+    selected, gif_io, _ = generate_wheel_gif(ctx, games)
+    await spin_wheel_and_show_result(ctx, games, "🎮 GC/Wii Mario Party Game Selected!", "GC/Wii Mario Party game",
+                                     f"assets/MP{int(selected.split()[-1])}.png", f"MP{int(selected.split()[-1])}.png")
 
-@bot.slash_command(name="pickn64", description="Selects a random N64 Mario Party game using the wheel.")
-    """Selects a random GameCube/Wii Mario Party game using the wheel."""
-    game_names = [f"Mario Party {i}" for i in range(4, 9)]
-    selected, gif_io, _ = generate_wheel_gif(ctx, game_names)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=game_names,
-        title="🎮 GC/Wii Mario Party Game Selected!",
-        description="GC/Wii Mario Party game",
-        image_path=f"assets/MP{int(selected.split()[-1])}.png",
-        filename=f"MP{int(selected.split()[-1])}.png"
-    )
 
-@bot.slash_command(name="pickn64", description="Selects a random N64 Mario Party game using the wheel.")
+@bot.slash_command(name="pickn64", description="Random N64 Mario Party game")
 async def pickn64(ctx):
-    """Selects a random N64 Mario Party game using the wheel."""
-    game_names = [f"Mario Party {i}" for i in range(1, 4)]
-    selected, gif_io, _ = generate_wheel_gif(ctx, game_names)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=game_names,
-        title="🎮 N64 Mario Party Game Selected!",
-        description="N64 Mario Party game",
-        image_path=f"assets/MP{int(selected.split()[-1])}.png",
-        filename=f"MP{int(selected.split()[-1])}.png"
-    )
+    games = [f"Mario Party {i}" for i in range(1, 4)]
+    selected, gif_io, _ = generate_wheel_gif(ctx, games)
+    await spin_wheel_and_show_result(ctx, games, "🎮 N64 Mario Party Game Selected!", "N64 Mario Party game",
+                                     f"assets/MP{int(selected.split()[-1])}.png", f"MP{int(selected.split()[-1])}.png")
+
 
 # Game mode commands
-@bot.slash_command(name="picknormalgamemode", description="Selects a random normal game mode using the wheel.")
-    """Selects a random N64 Mario Party game using the wheel."""
-    game_names = [f"Mario Party {i}" for i in range(1, 4)]
-    selected, gif_io, _ = generate_wheel_gif(ctx, game_names)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=game_names,
-        title="🎮 N64 Mario Party Game Selected!",
-        description="N64 Mario Party game",
-        image_path=f"assets/MP{int(selected.split()[-1])}.png",
-        filename=f"MP{int(selected.split()[-1])}.png"
-    )
-
-# Game mode commands
-@bot.slash_command(name="picknormalgamemode", description="Selects a random normal game mode using the wheel.")
+@bot.slash_command(name="picknormalgamemode", description="Random normal game mode")
 async def picknormalgamemode(ctx):
-    """Selects a random normal game mode using the wheel."""
-    normalgamemode = ["Mario Party: Magic Conch", "Mario Party: Simon Says", "Mario Party: Raiders Wrath", "Mario Party: Inversal Reversal"]
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=list(normalgamemode.values()),
-        title="🎯 Normal Game Mode Selected!",
-        description="normal game mode"
-    )
+    modes = ["Mario Party: Magic Conch", "Mario Party: Simon Says", "Mario Party: Raiders Wrath", "Mario Party: Inversal Reversal"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, modes)
+    await spin_wheel_and_show_result(ctx, modes, "🎯 Normal Game Mode Selected!", "normal game mode")
 
-@bot.slash_command(name="pickmayhemgamemode", description="Selects a random mayhem game mode using the wheel.")
-    """Selects a random normal game mode using the wheel."""
-    normalgamemode = ["Mario Party: Magic Conch", "Mario Party: Simon Says", "Mario Party: Raiders Wrath", "Mario Party: Inversal Reversal"]
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=list(normalgamemode.values()),
-        title="🎯 Normal Game Mode Selected!",
-        description="normal game mode"
-    )
 
-@bot.slash_command(name="pickmayhemgamemode", description="Selects a random mayhem game mode using the wheel.")
+@bot.slash_command(name="pickmayhemgamemode", description="Random mayhem game mode")
 async def pickmayhemgamemode(ctx):
-    """Selects a random mayhem game mode using the wheel."""
-    mayhemgamemode = ["Mario Party Mayhem: Classic", "Mario Party Mayhem: Modern", "Mario Party Mayhem: Magic Conch", "Mario Party Mayhem: Mayhem Says", "Mario Party Mayhem: Raiders Wrath", "Mario Party Mayhem: Inversal Reversal"]
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=list(mayhemgamemode.values()),
-        title="🎯 Mayhem Game Mode Selected!",
-        description="mayhem game mode"
-    )
+    modes = [
+        "Mario Party Mayhem: Classic", "Mario Party Mayhem: Modern", "Mario Party Mayhem: Magic Conch",
+        "Mario Party Mayhem: Mayhem Says", "Mario Party Mayhem: Raiders Wrath", "Mario Party Mayhem: Inversal Reversal"
+    ]
+    selected, gif_io, _ = generate_wheel_gif(ctx, modes)
+    await spin_wheel_and_show_result(ctx, modes, "🎯 Mayhem Game Mode Selected!", "mayhem game mode")
 
-@bot.slash_command(name="pickmp4mode", description="Selects a random Mario Party 4 version using the wheel.")
+
+@bot.slash_command(name="pickmp4mode", description="Random Mario Party 4 version")
 async def pickMP4mode(ctx):
-    """Selects a random Mario Party 4 version using the wheel."""
-    mp4_versions = ["Vanilla", "DX"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, mp4_versions)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=mp4_versions,
-        title="🎯 Mario Party 4 Version Selected!",
-        description="MP4 version"
-    )
+    modes = ["Vanilla", "DX"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, modes)
+    await spin_wheel_and_show_result(ctx, modes, "🎯 Mario Party 4 Version Selected!", "MP4 version")
 
-@bot.slash_command(name="pickmpmode", description="Selects a random Mario Party mode using the wheel.")
+
+@bot.slash_command(name="pickmpmode", description="Random Mario Party mode")
 async def pickMPmode(ctx):
-    """Selects a random Mario Party mode using the wheel."""
-    mp_modes = ["Vanilla", "Mayhem"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, mp_modes)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=mp_modes,
-        title="🎮 Mario Party Mode Selected!",
-        description="Mario Party mode"
-    )
+    modes = ["Vanilla", "Mayhem"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, modes)
+    await spin_wheel_and_show_result(ctx, modes, "🎮 Mario Party Mode Selected!", "Mario Party mode")
+
 
 # Settings commands
-@bot.slash_command(name="bonusstars", description="Selects a random bonus stars setting using the wheel.")
+@bot.slash_command(name="bonusstars", description="Random bonus stars setting")
 async def bstars(ctx):
-    """Selects a random bonus stars setting using the wheel."""
-    bonus_options = ["Off", "On", "Ztars"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, bonus_options)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=bonus_options,
-        title="⭐ Bonus Stars Setting Selected!",
-        description="bonus stars setting"
-    )
-    """Selects a random bonus stars setting using the wheel."""
-    bonus_options = ["Off", "On", "Ztars"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, bonus_options)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=bonus_options,
-        title="⭐ Bonus Stars Setting Selected!",
-        description="bonus stars setting"
-    )
+    options = ["Off", "On", "Ztars"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, options)
+    await spin_wheel_and_show_result(ctx, options, "⭐ Bonus Stars Setting Selected!", "bonus stars setting")
 
-@bot.slash_command(name="duels", description="Selects a random duels setting using the wheel.")
-@bot.slash_command(name="duels", description="Selects a random duels setting using the wheel.")
+
+@bot.slash_command(name="duels", description="Random duels setting")
 async def duels(ctx):
-    """Selects a random duels setting using the wheel."""
-    duels_options = ["Always", "Vanilla", "Never"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, duels_options)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=duels_options,
-        title="⚔️ Same Space Duels Setting Selected!",
-        description="duels setting"
-    )
-    """Selects a random duels setting using the wheel."""
-    duels_options = ["Always", "Vanilla", "Never"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, duels_options)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=duels_options,
-        title="⚔️ Same Space Duels Setting Selected!",
-        description="duels setting"
-    )
+    options = ["Always", "Vanilla", "Never"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, options)
+    await spin_wheel_and_show_result(ctx, options, "⚔️ Same Space Duels Setting Selected!", "duels setting")
 
-@bot.slash_command(name="gentlemans", description="Selects a random gentleman's rule setting using the wheel.")
-@bot.slash_command(name="gentlemans", description="Selects a random gentleman's rule setting using the wheel.")
+
+@bot.slash_command(name="gentlemans", description="Random gentleman's rule setting")
 async def gentlemans(ctx):
-    """Selects a random gentleman's rule setting using the wheel."""
-    gentleman_options = ["On", "Off"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, gentleman_options)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=gentleman_options,
-        title="🎩 Gentleman's Rule Setting Selected!",
-        description="gentleman's rule setting"
-    )
+    options = ["On", "Off"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, options)
+    await spin_wheel_and_show_result(ctx, options, "🎩 Gentleman's Rule Setting Selected!", "gentleman's rule setting")
+
 
 # Utility commands
-@bot.slash_command(name="commands", description="Shows the list of available commands.")
-    """Selects a random gentleman's rule setting using the wheel."""
-    gentleman_options = ["On", "Off"]
-    selected, gif_io, _ = generate_wheel_gif(ctx, gentleman_options)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=gentleman_options,
-        title="🎩 Gentleman's Rule Setting Selected!",
-        description="gentleman's rule setting"
-    )
-
-# Utility commands
-@bot.slash_command(name="commands", description="Shows the list of available commands.")
+@bot.slash_command(name="commands", description="Shows available commands")
 async def commands(ctx):
-    """Shows the list of available commands."""
     commands_string = "\n".join(get_commands_list())
     await ctx.respond("## Here's The List of Commands!")
     await ctx.respond(commands_string)
 
-@bot.slash_command(name='wheel', description="Spins a wheel with optional comma-separated arguments to filter options.")
+
+@bot.slash_command(name='wheel', description="Spin a wheel with optional args")
 async def wheel(ctx, args: str = None):
-    """Spins a wheel with optional comma-separated arguments to filter options."""
-    # Parse comma-separated arguments if provided
     filter_options = []
     if args:
         filter_options = [option.strip() for option in args.split(',')]
         await ctx.respond(f"🎯 Filtering wheel options to: {', '.join(filter_options)}")
 
     selected, gif_io, _ = generate_wheel_gif(ctx, filter_options)
-    await spin_wheel_and_show_result(
-        ctx=ctx,
-        options=filter_options,
-        title=f"🎉 The wheel landed on: {selected}!",
-        description="wheel selection"
-    )
+    await spin_wheel_and_show_result(ctx, filter_options, f"🎉 The wheel landed on: {selected}!", "wheel selection")
+
 
 bot.run(TOKEN)
