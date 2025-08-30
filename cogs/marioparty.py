@@ -26,8 +26,123 @@ class MarioParty(commands.Cog):
     board = SlashCommandGroup("board", "MP Board related commands")
     partyplanner = SlashCommandGroup("partyplanner", "Party Planner related commands")
 
+    async def spin_wheel_and_show_result(self, ctx, options, title, description, image_path=None, filename=None):
+        """Generic function to spin wheel and show result with embed."""
+        # Use the wheel system
+        selected, gif_io, _ = generate_wheel_gif(options)
+        
+        await ctx.respond(f"Spinning for {description.lower()}...", delete_after=0)
+
+        # Send the GIF
+        gif_file = discord.File(gif_io, "spinning_wheel.gif")
+        message = await ctx.send(file=gif_file)
+
+        # Wait for suspense
+        await asyncio.sleep(5)
+
+        # Delete the GIF message
+        await message.delete()
+        
+        # Create embed
+        result_embed = discord.Embed(title=title, description=f"**{selected}**", colour=0x98FB98)
+        
+        # Add image if provided
+        if image_path and filename:
+            try:
+                file = discord.File(image_path, filename=filename)
+                result_embed.set_image(url=f"attachment://{filename}")
+                result_embed.set_footer(text=f"Ran by: {ctx.author} • Yours truly, The Underground Grotto Bot")
+                await ctx.send(embed=result_embed, file=file)
+            except FileNotFoundError:
+                result_embed.set_footer(text=f"Ran by: {ctx.author} • Yours truly, The Underground Grotto Bot")
+                await ctx.send(embed=result_embed)
+        else:
+            result_embed.set_footer(text=f"Ran by: {ctx.author} • Yours truly, The Underground Grotto Bot")
+            await ctx.send(embed=result_embed)
+
+    # Game selection commands
+    @commands.slash_command(name="pickgame", description="Random Mario Party game")
+    async def pickgame(self, ctx):
+        games = [f"Mario Party {i}" for i in range(1, 9)]
+        selected, gif_io, _ = generate_wheel_gif(games)
+        await self.spin_wheel_and_show_result(ctx, games, "🎮 Mario Party Game Selected!", "Mario Party game",
+                                             f"assets/MP{int(selected.split()[-1])}.png", f"MP{int(selected.split()[-1])}.png")
+
+    @commands.slash_command(name="pickgcwii", description="Random GC/Wii Mario Party game")
+    async def pickgcwii(self, ctx):
+        games = [f"Mario Party {i}" for i in range(4, 9)]
+        selected, gif_io, _ = generate_wheel_gif(games)
+        await self.spin_wheel_and_show_result(ctx, games, "🎮 GC/Wii Mario Party Game Selected!", "GC/Wii Mario Party game",
+                                             f"assets/MP{int(selected.split()[-1])}.png", f"MP{int(selected.split()[-1])}.png")
+
+    @commands.slash_command(name="pickn64", description="Random N64 Mario Party game")
+    async def pickn64(self, ctx):
+        games = [f"Mario Party {i}" for i in range(1, 4)]
+        selected, gif_io, _ = generate_wheel_gif(games)
+        await self.spin_wheel_and_show_result(ctx, games, "🎮 N64 Mario Party Game Selected!", "N64 Mario Party game",
+                                             f"assets/MP{int(selected.split()[-1])}.png", f"MP{int(selected.split()[-1])}.png")
+
+    # Game mode commands
+    @commands.slash_command(name="picknormalgamemode", description="Random normal game mode")
+    async def picknormalgamemode(self, ctx):
+        modes = ["Mario Party: Magic Conch", "Mario Party: Simon Says", "Mario Party: Raiders Wrath", "Mario Party: Inversal Reversal"]
+        selected, gif_io, _ = generate_wheel_gif(modes)
+        await self.spin_wheel_and_show_result(ctx, modes, "🎯 Normal Game Mode Selected!", "normal game mode")
+
+    @commands.slash_command(name="pickmayhemgamemode", description="Random mayhem game mode")
+    async def pickmayhemgamemode(self, ctx):
+        modes = [
+            "Mario Party Mayhem: Classic", "Mario Party Mayhem: Modern", "Mario Party Mayhem: Magic Conch",
+            "Mario Party Mayhem: Mayhem Says", "Mario Party Mayhem: Raiders Wrath", "Mario Party Mayhem: Inversal Reversal"
+        ]
+        selected, gif_io, _ = generate_wheel_gif(modes)
+        await self.spin_wheel_and_show_result(ctx, modes, "🎯 Mayhem Game Mode Selected!", "mayhem game mode")
+
+    @commands.slash_command(name="pickmp4mode", description="Random Mario Party 4 version")
+    async def pickMP4mode(self, ctx):
+        modes = ["Vanilla", "DX"]
+        selected, gif_io, _ = generate_wheel_gif(modes)
+        await self.spin_wheel_and_show_result(ctx, modes, "🎯 Mario Party 4 Version Selected!", "MP4 version")
+
+    @commands.slash_command(name="pickmpmode", description="Random Mario Party mode")
+    async def pickMPmode(self, ctx):
+        modes = ["Vanilla", "Mayhem"]
+        selected, gif_io, _ = generate_wheel_gif(modes)
+        await self.spin_wheel_and_show_result(ctx, modes, "🎮 Mario Party Mode Selected!", "Mario Party mode")
+
+    # Settings commands
+    @commands.slash_command(name="bonusstars", description="Random bonus stars setting")
+    async def bstars(self, ctx):
+        options = ["Off", "On", "Ztars"]
+        selected, gif_io, _ = generate_wheel_gif(options)
+        await self.spin_wheel_and_show_result(ctx, options, "⭐ Bonus Stars Setting Selected!", "bonus stars setting")
+
+    @commands.slash_command(name="duels", description="Random duels setting")
+    async def duels(self, ctx):
+        options = ["Always", "Vanilla", "Never"]
+        selected, gif_io, _ = generate_wheel_gif(options)
+        await self.spin_wheel_and_show_result(ctx, options, "⚔️ Same Space Duels Setting Selected!", "duels setting")
+
+    @commands.slash_command(name="gentlemans", description="Random gentleman's rule setting")
+    async def gentlemans(self, ctx):
+        options = ["On", "Off"]
+        selected, gif_io, _ = generate_wheel_gif(options)
+        await self.spin_wheel_and_show_result(ctx, options, "🎩 Gentleman's Rule Setting Selected!", "gentleman's rule setting")
+
+    @commands.slash_command(name='wheel', description="Spin a wheel with optional args")
+    async def wheel(self, ctx, args: str = None):
+        if not args:
+            await ctx.respond("Please provide options separated by commas. Example: `/wheel Mario Party 1, Mario Party 2, Mario Party 3`")
+            return
+            
+        filter_options = [option.strip() for option in args.split(',')]
+        await ctx.respond(f"🎯 Filtering wheel options to: {', '.join(filter_options)}")
+
+        selected, gif_io, _ = generate_wheel_gif(filter_options)
+        await self.spin_wheel_and_show_result(ctx, filter_options, f"🎉 The wheel landed on: {selected}!", "wheel selection")
+
     async def spin_board_wheel(self, ctx, boardList, game_name):
-        """Helper function to spin the wheel for any Mario Party game."""
+        """Helper function to spin the wheel for any Mario Party game board."""
         # Generate GIF & final static image
         selected_board, gif_io, final_img_io = generate_wheel_gif(boardList)
         
