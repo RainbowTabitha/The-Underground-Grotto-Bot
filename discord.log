@@ -1,0 +1,9 @@
+2025-08-30 16:08:56,870 - discord.client - INFO - logging in using static token
+2025-08-30 16:08:57,290 - discord.gateway - INFO - Shard ID None has sent the IDENTIFY payload.
+2025-08-30 16:08:57,423 - discord.gateway - INFO - Shard ID None has connected to Gateway: ["gateway-prd-arm-us-east1-d-8tvm",{"micros":92250,"calls":["id_created",{"micros":845,"calls":[]},"session_lookup_time",{"micros":306,"calls":[]},"session_lookup_finished",{"micros":13,"calls":[]},"discord-sessions-prd-2-177",{"micros":90803,"calls":["start_session",{"micros":76268,"calls":["discord-api-rpc-58b7458bcf-wppjv",{"micros":51553,"calls":["get_user",{"micros":5984},"get_guilds",{"micros":11048},"send_scheduled_deletion_message",{"micros":10},"guild_join_requests",{"micros":189},"authorized_ip_coro",{"micros":9},"pending_payments",{"micros":13391},"apex_experiments",{"micros":3590},"user_activities",{"micros":4},"played_application_ids",{"micros":1}]}]},"starting_guild_connect",{"micros":68,"calls":[]},"presence_started",{"micros":350,"calls":[]},"guilds_started",{"micros":82,"calls":[]},"lobbies_started",{"micros":1,"calls":[]},"guilds_connect",{"micros":1,"calls":[]},"presence_connect",{"micros":14019,"calls":[]},"connect_finished",{"micros":14023,"calls":[]},"build_ready",{"micros":10,"calls":[]},"clean_ready",{"micros":0,"calls":[]},"optimize_ready",{"micros":0,"calls":[]},"split_ready",{"micros":1,"calls":[]}]}]}] (Session ID: 9645d9ae7ee9d6c18950a17ac1deefa6).
+2025-08-30 16:08:59,503 - UndergroundGrottoBot - INFO - Bot is ready! Logged in as Furry Convention Hub#0925
+2025-08-30 16:08:59,841 - UndergroundGrottoBot - INFO - Synced commands successfully
+2025-08-30 16:09:02,747 - discord.client - INFO - Cleaning up tasks.
+2025-08-30 16:09:02,747 - discord.client - INFO - Cleaning up after 1 tasks.
+2025-08-30 16:09:02,747 - discord.client - INFO - All tasks finished cancelling.
+2025-08-30 16:09:02,748 - discord.client - INFO - Closing the event loop.
