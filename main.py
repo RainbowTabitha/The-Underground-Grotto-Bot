@@ -1,588 +1,360 @@
 import discord
-from discord.ext import commands
-
 import logging
-
-import random
-
 import os
+import asyncio
+import random
+from datetime import datetime
 from dotenv import load_dotenv
+from wheel import generate_wheel_gif, spin_wheel_and_show_result
 
+# Load environment variables
 load_dotenv()
-token = os.getenv("DISCORD_TOKEN")
+TOKEN = os.getenv("DISCORD_TOKEN")
 
-handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-intents = discord.Intents.default()
-intents.message_content = True
-intents.members = True
+# Bot setup
+intents = discord.Intents.all()
+bot = discord.Bot(intents=intents)
 
-bot = commands.Bot(command_prefix='$', intents=intents)
+# Logging setup
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('discord.log', encoding='utf-8', mode='w'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger('UndergroundGrottoBot')
 
-commandsList = ["$board1", "$board2", "$board3", "$board4", "$board5", "$board6", "$board7", "$board8", "$bonusstars", "$commands", "$duels", "$gentlemans", "$pickgame", "$pickgcwii", "$pickMPmode", "$pickMP4mode", "$pickn64", "$pickmayhemgamemode", "$picknormalgamemode"]
+def get_commands_list():
+    """Automatically generate the list of available slash commands."""
+    commands = []
+    if hasattr(bot, 'application_commands'):
+        for cmd in bot.application_commands:
+            if hasattr(cmd, 'name'):
+                commands.append(f"/{cmd.name}")
+    return sorted(commands)
 
-boards1 = {
-    1: "DK's Jungle Adventure",
-    2: "Peach's Birthday Cake",
-    3: "Yoshi's Tropical Island",
-    4: "Wario's Battle Canyon",
-    5: "Luigi's Engine Room",
-    6: "Mario's Rainbow Castle",
-    7: "Bowser's Magma Mountain",
-    8: "Eternal Star"
-}
+# Initialize empty commands list (will be populated after bot sync)
+COMMANDS_LIST = []
 
-boards1IMG = {
-    1: "assets/DK's Jungle Adventure.png",
-    2: "assets/Peach's Birthday Cake.png",
-    3: "assets/Yoshi's Tropical Island.png",
-    4: "assets/Wario's Battle Canyon.png",
-    5: "assets/Luigi's Engine Room.png",
-    6: "assets/Mario's Rainbow Castle.png",
-    7: "assets/Bowser's Magma Mountain.png",
-    8: "assets/Eternal Star.png"
-}
+def get_board_key_by_value(board_dict, value):
+    """Get the key for a given board value."""
+    for key, val in board_dict.items():
+        if val == value:
+            return key
+    return None
 
-boards2 = {
-    1: "Pirate Land",
-    2: "Western Land",
-    3: "Space Land",
-    4: "Mystery Land",
-    5: "Horror Land",
-    6: "Bowser Land"
-}
-
-boards2IMG = {
-    1: "assets/Pirate Land.png",
-    2: "assets/Western Land.png",
-    3: "assets/Space Land.png",
-    4: "assets/Mystery Land.png",
-    5: "assets/Horror Land.png",
-    6: "assets/Bowser Land.png"
-}
-
-boards3 = {
-    1: "Chilly Waters",
-    2: "Deep Bloober Sea",
-    3: "Spiny Desert",
-    4: "Woody Woods",
-    5: "Creepy Cavern",
-    6: "Waluigi's Island"
-}
-
-boards3IMG = {
-    1: "assets/Chilly Waters.png",
-    2: "assets/Deep Bloober Sea.png",
-    3: "assets/Spiny Desert.png",
-    4: "assets/Woody Woods.png",
-    5: "assets/Creepy Cavern.png",
-    6: "assets/Waluigi's Island.png"
-}
-
-boards4 = {
-    1: "Toad's Midway Madness",
-    2: "Shy Guy's Jungle Jam",
-    3: "Goomba's Greedy Gala",
-    4: "Boo's Haunted Bash",
-    5: "Koopa's Seaside Soiree",
-    6: "Bowser's Gnarly Party"
-}
-
-boards4IMG = {
-    1: "assets/Toad's Midway Madness.png",
-    2: "assets/Shy Guy's Jungle Jam.png",
-    3: "assets/Goomba's Greedy Gala.png",
-    4: "assets/Boo's Haunted Bash.png",
-    5: "assets/Koopa's Seaside Soiree.png",
-    6: "assets/Bowser's Gnarly Party.png"
-}
-
-boards5 = {
-    1: "Toy Dream",
-    2: "Rainbow Dream",
-    3: "Pirate Dream",
-    4: "Undersea Dream",
-    5: "Future Dream",
-    6: "Sweet Dream",
-    7: "Bowser's Nightmare"
-}
-
-boards5IMG = {
-    1: "assets/Toy Dream.png",
-    2: "assets/Rainbow Dream.png",
-    3: "assets/Pirate Dream.png",
-    4: "assets/Undersea Dream.png",
-    5: "assets/Future Dream.png",
-    6: "assets/Sweet Dream.png",
-    7: "assets/Bowser's Nightmare.png",
-}
-
-boards6 = {
-    1: "Towering Treetop",
-    2: "E.Gadd's Garage",
-    3: "Faire Square",
-    4: "Snowflake Lake",
-    5: "Castaway Bay",
-    6: "Clockwork Castle"
-}
-
-boards6IMG = {
-    1: "assets/Towering Treetop.png",
-    2: "assets/E.Gadd's Garage.png",
-    3: "assets/Faire Square.png",
-    4: "assets/Snowflake Lake.png",
-    5: "assets/Castaway Bay.png",
-    6: "assets/Clockwork Castle.png"
-}
-
-boards7 = {
-    1: "Grand Canal",
-    2: "Pagoda Peak",
-    3: "Pyramid Park",
-    4: "Neon Heights",
-    5: "Windmillville",
-    6: "Bowser's Enchanted Inferno"
-}
-
-boards7IMG = {
-    1: "assets/Grand Canal.png",
-    2: "assets/Pagoda Peak.png",
-    3: "assets/Pyramid Park.png",
-    4: "assets/Neon Heights.png",
-    5: "assets/Windmillville.png",
-    6: "assets/Bowser's Enchanted Inferno.png"
-}
-
-boards8 = {
-    1: "DK's Treetop Temple",
-    2: "Goomba's Booty Boardwalk",
-    3: "King Boo's Haunted Hideaway",
-    4: "Shy Guy's Perplex Express",
-    5: "Koopa's Tycoon Town",
-    6: "Bowser's Warped Orbit"
-}
-
-boards8IMG = {
-    1: "assets/DK's Treetop Temple.png",
-    2: "assets/Goomba's Booty Boardwalk.png",
-    3: "assets/King Boo's Haunted Hideaway.png",
-    4: "assets/Shy Guy's Perplex Express.png",
-    5: "assets/Koopa's Tycoon Town.png",
-    6: "assets/Bowser's Warped Orbit.png"
-}
-
-mayhemgamemode = {
-    1: "Mario Party Mayhem: Classic",
-    2: "Mario Party Mayhem: Modern",
-    3: "Mario Party Mayhem: Magic Conch",
-    4: "Mario Party Mayhem: Mayhem Says",
-    5: "Mario Party Mayhem: Raiders Wrath",
-    6: "Mario Party Mayhem: Inversal Reversal"
-}
-
-normalgamemode = {
-    1: "Mario Party: Magic Conch",
-    2: "Mario Party: Simon Says",
-    3: "Mario Party: Raiders Wrath",
-    4: "Mario Party: Inversal Reversal"
-}
-
-
-gamesIMG = {
-    1: "assets/MP1.png",
-    2: "assets/MP2.png",
-    3: "assets/MP3.png",
-    4: "assets/MP4.png",
-    5: "assets/MP5.png",
-    6: "assets/MP6.png",
-    7: "assets/MP7.png",
-    8: "assets/MP8.png"
-}
-
+# Bot events
 @bot.event
 async def on_ready():
-    print(f'Now Running {bot.user}!')
+    logger.info(f'Bot is ready! Logged in as {bot.user}')
+    print(f'🎮 Now Running {bot.user}!')
+    print(f'🆔 Bot ID: {bot.user.id}')
+    print(f'📊 Connected to {len(bot.guilds)} guild(s)')
+    print(f'👥 Serving {len(bot.users)} user(s)')
+    
+    try:
+        synced = await bot.sync_commands()
+        # Handle different return types from sync_commands()
+        if synced is not None and hasattr(synced, '__len__'):
+            logger.info(f"Synced {len(synced)} command(s)")
+            print(f"✅ Synced {len(synced)} command(s)")
+        else:
+            logger.info("Synced commands successfully")
+            print("✅ Synced commands successfully")
+        global COMMANDS_LIST
+        COMMANDS_LIST = get_commands_list()
+        print(f"📋 Available commands: {COMMANDS_LIST}")
+    except Exception as e:
+        logger.error(f"Failed to sync commands: {e}")
+        print(f"❌ Failed to sync commands: {e}")
 
-@bot.command(name="board1")
+@bot.event
+async def on_guild_join(guild):
+    """Log when bot joins a new guild"""
+    logger.info(f"Joined guild: {guild.name} (ID: {guild.id})")
+    print(f"🎉 Joined new guild: {guild.name}")
+
+@bot.event
+async def on_guild_remove(guild):
+    """Log when bot leaves a guild"""
+    logger.info(f"Left guild: {guild.name} (ID: {guild.id})")
+    print(f"👋 Left guild: {guild.name}")
+
+@bot.event
+async def on_command_error(ctx, error):
+    """Global error handler"""
+    if isinstance(error, discord.ApplicationCommandInvokeError):
+        logger.error(f"Command error in {ctx.command}: {error.original}")
+        await ctx.respond(f"❌ An error occurred: {str(error.original)}", ephemeral=True)
+    else:
+        logger.error(f"Unexpected error: {error}")
+        await ctx.respond("❌ An unexpected error occurred.", ephemeral=True)
+
+# Board selection commands
+@bot.slash_command(name="board1", description="Selects a random Mario Party 1 board using the wheel.")
 async def board1(ctx):
-    randint = random.randint(1,8)
-    selection = boards1[randint]
-    file_path = boards1IMG[randint]
-    
-    if randint == 1:
-        file = discord.File(file_path, filename="DK's Jungle Adventure.png")
-        await ctx.send("## The Selected Mario Party 1 Board is... " + selection, file=file)
-    elif randint == 2:
-        file = discord.File(file_path, filename="Peach's Birthday Cake.png")
-        await ctx.send("## The Selected Mario Party 1 Board is... " + selection, file=file)
-    elif randint == 3:
-        file = discord.File(file_path, filename="Yoshi's Tropical Island.png")
-        await ctx.send("## The Selected Mario Party 1 Board is... " + selection, file=file)
-    elif randint == 4:
-        file = discord.File(file_path, filename="Wario's Battle Canyon.png")
-        await ctx.send("## The Selected Mario Party 1 Board is... " + selection, file=file)
-    elif randint == 5:
-        file = discord.File(file_path, filename="Luigi's Engine Room.png")
-        await ctx.send("## The Selected Mario Party 1 Board is... " + selection, file=file)
-    elif randint == 6:
-        file = discord.File(file_path, filename="Mario's Rainbow Castle.png")
-        await ctx.send("## The Selected Mario Party 1 Board is... " + selection, file=file)
-    elif randint == 7:
-        file = discord.File(file_path, filename="Bowser's Magma Mountain.png")
-        await ctx.send("## The Selected Mario Party 1 Board is... " + selection, file=file)
-    elif randint == 8:
-        file = discord.File(file_path, filename="Eternal Star.png")
-        await ctx.send("## The Selected Mario Party 1 Board is... " + selection, file=file)
+    """Selects a random Mario Party 1 board using the wheel."""
+    boards1 = ["DK's Jungle Adventure", "Peach's Birthday Cake", "Yoshi's Tropical Island", "Wario's Battle Canyon", "Luigi's Engine Room", "Mario's Rainbow Castle", "Bowser's Magma Mountain", "Eternal Star"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, boards1)
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=boards1,
+        title="🎯 Mario Party 1 Board Selected!",
+        description="MP1 board",
+        image_path=f"assets/{selected}.png",
+        filename=f"{selected}.png"
+    )
 
-@bot.command(name="board2")
+@bot.slash_command(name="board2", description="Selects a random Mario Party 2 board using the wheel.")
 async def board2(ctx):
-    randint = random.randint(1,6)
-    selection = boards2[randint]
-    file_path = boards2IMG[randint]
-    
-    match randint:
-        case 1:
-            file = discord.File(file_path, filename="Pirate Land.png")
-            await ctx.send("## The Selected Mario Party 2 Board is... " + selection, file=file)
-        case 2:
-            file = discord.File(file_path, filename="Western Land.png")
-            await ctx.send("## The Selected Mario Party 2 Board is... " + selection, file=file)
-        case 3:
-            file = discord.File(file_path, filename="Space Land.png")
-            await ctx.send("## The Selected Mario Party 2 Board is... " + selection, file=file)
-        case 4:
-            file = discord.File(file_path, filename="Mystery Land.png")
-            await ctx.send("## The Selected Mario Party 2 Board is... " + selection, file=file)
-        case 5:
-            file = discord.File(file_path, filename="Horror Land.png")
-            await ctx.send("## The Selected Mario Party 2 Board is... " + selection, file=file)
-        case 6:
-            file = discord.File(file_path, filename="Bowser Land.png")
-            await ctx.send("## The Selected Mario Party 2 Board is... " + selection, file=file)
+    """Selects a random Mario Party 2 board using the wheel."""
+    boards2 = ["Pirate Land", "Western Land", "Space Land", "Mystery Land", "Horror Land", "Bowser Land"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, boards2)
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=boards2,
+        title="🎯 Mario Party 2 Board Selected!",
+        description="MP2 board",
+        image_path=f"assets/{selected}.png",
+        filename=f"{selected}.png"
+    )
 
-@bot.command(name="board3")
+@bot.slash_command(name="board3", description="Selects a random Mario Party 3 board using the wheel.")
 async def board3(ctx):
-    randint = random.randint(1,6)
-    selection = boards3[randint]
-    file_path = boards3IMG[randint]
-    
-    match randint:
-        case 1:
-            file = discord.File(file_path, filename="Chilly Waters.png")
-            await ctx.send("## The Selected Mario Party 3 Board is... " + selection, file=file)
-        case 2:
-            file = discord.File(file_path, filename="Deep Bloober Sea.png")
-            await ctx.send("## The Selected Mario Party 3 Board is... " + selection, file=file)
-        case 3:
-            file = discord.File(file_path, filename="Spiny Desert.png")
-            await ctx.send("## The Selected Mario Party 3 Board is... " + selection, file=file)
-        case 4:
-            file = discord.File(file_path, filename="Woody Woods.png")
-            await ctx.send("## The Selected Mario Party 3 Board is... " + selection, file=file)
-        case 5:
-            file = discord.File(file_path, filename="Creepy Cavern.png")
-            await ctx.send("## The Selected Mario Party 3 Board is... " + selection, file=file)
-        case 6:
-            file = discord.File(file_path, filename="Waluigi's Island.png")
-            await ctx.send("## The Selected Mario Party 3 Board is... " + selection, file=file)
+    """Selects a random Mario Party 3 board using the wheel."""
+    boards3 = ["Chilly Waters", "Deep Bloober Sea", "Spiny Desert", "Woody Woods", "Creepy Cavern", "Waluigi's Island"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, boards3)
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=boards3,
+        title="🎯 Mario Party 3 Board Selected!",
+        description="MP3 board",
+        image_path=f"assets/{selected}.png",
+        filename=f"{selected}.png"
+    )
 
-@bot.command(name="board4")
+@bot.slash_command(name="board4", description="Selects a random Mario Party 4 board using the wheel.")
 async def board4(ctx):
-    randint = random.randint(1,6)
-    selection = boards4[randint]
-    file_path = boards4IMG[randint]
-    
-    match randint:
-        case 1:
-            file = discord.File(file_path, filename="Toad's Midway Madness.png")
-            await ctx.send("## The Selected Mario Party 4 Board is... " + selection, file=file)
-        case 2:
-            file = discord.File(file_path, filename="Goomba's Greedy Gala.png")
-            await ctx.send("## The Selected Mario Party 4 Board is... " + selection, file=file)
-        case 3:
-            file = discord.File(file_path, filename="Shy Guy's Jungle Jam.png")
-            await ctx.send("## The Selected Mario Party 4 Board is... " + selection, file=file)
-        case 4:
-            file = discord.File(file_path, filename="Boo's Haunted Bash.png")
-            await ctx.send("## The Selected Mario Party 4 Board is... " + selection, file=file)
-        case 5:
-            file = discord.File(file_path, filename="Koopa's Seaside Soiree.png")
-            await ctx.send("## The Selected Mario Party 4 Board is... " + selection, file=file)
-        case 6:
-            file = discord.File(file_path, filename="Bowser's Gnarly Party.png")
-            await ctx.send("## The Selected Mario Party 4 Board is... " + selection, file=file)
+    """Selects a random Mario Party 4 board using the wheel."""
+    boards4 = ["Toad's Midway Madness", "Shy Guy's Jungle Jam", "Goomba's Greedy Gala", "Boo's Haunted Bash", "Koopa's Seaside Soiree", "Bowser's Gnarly Party"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, boards4)
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=boards4,
+        title="🎯 Mario Party 4 Board Selected!",
+        description="MP4 board",
+        image_path=f"assets/{selected}.png",
+        filename=f"{selected}.png"
+    )
 
-@bot.command(name="board5")
+@bot.slash_command(name="board5", description="Selects a random Mario Party 5 board using the wheel.")
 async def board5(ctx):
-    randint = random.randint(1,7)
-    selection = boards5[randint]
-    file_path = boards5IMG[randint]
+    """Selects a random Mario Party 5 board using the wheel."""
+    boards5 = ["Toy Dream", "Rainbow Dream", "Pirate Dream", "Undersea Dream", "Future Dream", "Sweet Dream", "Bowser's Nightmare"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, boards5)
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=boards5,
+        title="🎯 Mario Party 5 Board Selected!",
+        description="MP5 board",
+        image_path=f"assets/{selected}.png",
+        filename=f"{selected}.png"
+    )
 
-    match randint:
-        case 1:
-            file = discord.File(file_path, filename="Toy Dream.png")
-            await ctx.send("## The Selected Mario Party 5 Board is... " + selection, file=file)
-        case 2:
-            file = discord.File(file_path, filename="Rainbow Dream.png")
-            await ctx.send("## The Selected Mario Party 5 Board is... " + selection, file=file)
-        case 3:
-            file = discord.File(file_path, filename="Pirate Dream.png")
-            await ctx.send("## The Selected Mario Party 5 Board is... " + selection, file=file)
-        case 4:
-            file = discord.File(file_path, filename="Undersea Dream.png")
-            await ctx.send("## The Selected Mario Party 5 Board is... " + selection, file=file)
-        case 5:
-            file = discord.File(file_path, filename="Future Dream.png")
-            await ctx.send("## The Selected Mario Party 5 Board is... " + selection, file=file)
-        case 6:
-            file = discord.File(file_path, filename="Sweet Dream.png")
-            await ctx.send("## The Selected Mario Party 5 Board is... " + selection, file=file)
-        case 7:
-            file = discord.File(file_path, filename="Bowser's Nightmare.png")
-            await ctx.send("## The Selected Mario Party 5 Board is... " + selection, file=file)
-
-@bot.command(name="board6")
+@bot.slash_command(name="board6", description="Selects a random Mario Party 6 board using the wheel.")
 async def board6(ctx):
-    randint = random.randint(1,6)
-    selection = boards6[randint]
-    file_path = boards6IMG[randint]
-    
-    match randint:
-        case 1:
-            file = discord.File(file_path, filename="Towering Treetop.png")
-            await ctx.send("## The Selected Mario Party 6 Board is... " + selection, file=file)
-        case 2:
-            file = discord.File(file_path, filename="E.Gadd's Garage.png")
-            await ctx.send("## The Selected Mario Party 6 Board is... " + selection, file=file)
-        case 3:
-            file = discord.File(file_path, filename="Faire Square.png")
-            await ctx.send("## The Selected Mario Party 6 Board is... " + selection, file=file)
-        case 4:
-            file = discord.File(file_path, filename="Snowflake Lake.png")
-            await ctx.send("## The Selected Mario Party 6 Board is... " + selection, file=file)
-        case 5:
-            file = discord.File(file_path, filename="Castaway Bay.png")
-            await ctx.send("## The Selected Mario Party 6 Board is... " + selection, file=file)
-        case 6:
-            file = discord.File(file_path, filename="Clockwork Castle.png")
-            await ctx.send("## The Selected Mario Party 6 Board is... " + selection, file=file)
+    """Selects a random Mario Party 6 board using the wheel."""
+    boards6 = ["Towering Treetop", "E.Gadd's Garage", "Faire Square", "Snowflake Lake", "Castaway Bay", "Clockwork Castle"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, boards6)
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=boards6,
+        title="🎯 Mario Party 6 Board Selected!",
+        description="MP6 board",
+        image_path=f"assets/{selected}.png",
+        filename=f"{selected}.png"
+    )
 
-@bot.command(name="board7")
+@bot.slash_command(name="board7", description="Selects a random Mario Party 7 board using the wheel.")
 async def board7(ctx):
-    randint = random.randint(1,6)
-    selection = boards7[randint]
-    file_path = boards7IMG[randint]
-    
-    match randint:
-        case 1:
-            file = discord.File(file_path, filename="Grand Canal.png")
-            await ctx.send("## The Selected Mario Party 7 Board is... " + selection, file=file)
-        case 2:
-            file = discord.File(file_path, filename="Pagoda Peak.png")
-            await ctx.send("## The Selected Mario Party 7 Board is... " + selection, file=file)
-        case 3:
-            file = discord.File(file_path, filename="Pyramid Park.png")
-            await ctx.send("## The Selected Mario Party 7 Board is... " + selection, file=file)
-        case 4:
-            file = discord.File(file_path, filename="Neon Heights.png")
-            await ctx.send("## The Selected Mario Party 7 Board is... " + selection, file=file)
-        case 5:
-            file = discord.File(file_path, filename="Windmillville.png")
-            await ctx.send("## The Selected Mario Party 7 Board is... " + selection, file=file)
-        case 6:
-            file = discord.File(file_path, filename="Bowser's Enchanted Inferno.png")
-            await ctx.send("## The Selected Mario Party 7 Board is... " + selection, file=file)
+    """Selects a random Mario Party 7 board using the wheel."""
+    boards7 = ["Grand Canal", "Pagoda Peak", "Pyramid Park", "Neon Heights", "Windmillville", "Bowser's Enchanted Inferno"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, boards7)
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=boards7,
+        title="🎯 Mario Party 7 Board Selected!",
+        description="MP7 board",
+        image_path=f"assets/{selected}.png",
+        filename=f"{selected}.png"
+    )
 
-@bot.command(name="board8")
+@bot.slash_command(name="board8", description="Selects a random Mario Party 8 board using the wheel.")
 async def board8(ctx):
-    randint = random.randint(1,6)
-    selection = boards8[randint]
-    file_path = boards8IMG[randint]
-    
-    match randint:
-        case 1:
-            file = discord.File(file_path, filename="DK's Treetop Temple.png")
-            await ctx.send("## The Selected Mario Party 8 Board is... " + selection, file=file)
-        case 2:
-            file = discord.File(file_path, filename="Goomba's Booty Boardwalk.png")
-            await ctx.send("## The Selected Mario Party 8 Board is... " + selection, file=file)
-        case 3:
-            file = discord.File(file_path, filename="King Boo's Haunted Hideaway.png")
-            await ctx.send("## The Selected Mario Party 8 Board is... " + selection, file=file)
-        case 4:
-            file = discord.File(file_path, filename="Shy Guy's Perplex Express.png")
-            await ctx.send("## The Selected Mario Party 8 Board is... " + selection, file=file)
-        case 5:
-            file = discord.File(file_path, filename="Koopa's Tycoon Town.png")
-            await ctx.send("## The Selected Mario Party 8 Board is... " + selection, file=file)
-        case 6:
-            file = discord.File(file_path, filename="Bowser's Warped Orbit.png")
-            await ctx.send("## The Selected Mario Party 8 Board is... " + selection, file=file)
+    """Selects a random Mario Party 8 board using the wheel."""
+    boards8 = ["DK's Treetop Temple", "Goomba's Booty Boardwalk", "King Boo's Haunted Hideaway", "Shy Guy's Perplex Express", "Koopa's Tycoon Town", "Bowser's Warped Orbit"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, boards8)
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=boards8,
+        title="🎯 Mario Party 8 Board Selected!",
+        description="MP8 board",
+        image_path=f"assets/{selected}.png",
+        filename=f"{selected}.png"
+    )
 
-
-@bot.command(name="pickgame")
+# Game selection commands
+@bot.slash_command(name="pickgame", description="Selects a random Mario Party game using the wheel.")
 async def pickgame(ctx):
-    randint = random.randint(1,8)
-    file_path = gamesIMG[randint]
+    """Selects a random Mario Party game using the wheel."""
+    game_names = [f"Mario Party {i}" for i in range(1, 9)]
+    selected, gif_io, _ = generate_wheel_gif(ctx, game_names)
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=game_names,
+        title="🎮 Mario Party Game Selected!",
+        description="Mario Party game",
+        image_path=f"assets/MP{int(selected.split()[-1])}.png",
+        filename=f"MP{int(selected.split()[-1])}.png"
+    )
 
-    if randint == 1:
-        file = discord.File(file_path, filename="MP1.png")
-        await ctx.send("## The Selected Game is... Mario Party " + str(randint), file=file)
-    elif randint == 2:
-        file = discord.File(file_path, filename="MP2.png")
-        await ctx.send("## The Selected Game is... Mario Party " + str(randint), file=file)
-    elif randint == 3:
-        file = discord.File(file_path, filename="MP3.png")
-        await ctx.send("## The Selected Game is... Mario Party " + str(randint), file=file)
-    elif randint == 4:
-        file = discord.File(file_path, filename="MP4.png")
-        await ctx.send("## The Selected Game is... Mario Party " + str(randint), file=file)
-    elif randint == 5:
-        file = discord.File(file_path, filename="MP5.png")
-        await ctx.send("## The Selected Game is... Mario Party " + str(randint), file=file)
-    elif randint == 6:
-        file = discord.File(file_path, filename="MP6.png")
-        await ctx.send("## The Selected Game is... Mario Party " + str(randint), file=file)
-    elif randint == 7:
-        file = discord.File(file_path, filename="MP7.png")
-        await ctx.send("## The Selected Game is... Mario Party " + str(randint), file=file)
-    elif randint == 8:
-        file = discord.File(file_path, filename="MP8.png")
-        await ctx.send("## The Selected Game is... Mario Party " + str(randint), file=file)
-
-@bot.command(name="pickgcwii")
+@bot.slash_command(name="pickgcwii", description="Selects a random GameCube/Wii Mario Party game using the wheel.")
 async def pickgcwii(ctx):
-    randint = random.randint(4,8)
-    file_path = gamesIMG[randint]
+    """Selects a random GameCube/Wii Mario Party game using the wheel."""
+    game_names = [f"Mario Party {i}" for i in range(4, 9)]
+    selected, gif_io, _ = generate_wheel_gif(ctx, game_names)
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=game_names,
+        title="🎮 GC/Wii Mario Party Game Selected!",
+        description="GC/Wii Mario Party game",
+        image_path=f"assets/MP{int(selected.split()[-1])}.png",
+        filename=f"MP{int(selected.split()[-1])}.png"
+    )
 
-    match randint:
-        case 4:
-            file = discord.File(file_path, filename="MP4.png")
-            await ctx.send("## The Selected Game is... Mario Party " + str(randint), file=file)
-        case 5:
-            file = discord.File(file_path, filename="MP5.png")
-            await ctx.send("## The Selected Game is... Mario Party " + str(randint), file=file)
-        case 6:
-            file = discord.File(file_path, filename="MP6.png")
-            await ctx.send("## The Selected Game is... Mario Party " + str(randint), file=file)
-        case 7:
-            file = discord.File(file_path, filename="MP7.png")
-            await ctx.send("## The Selected Game is... Mario Party " + str(randint), file=file)
-        case 8:
-            file = discord.File(file_path, filename="MP8.png")
-            await ctx.send("## The Selected Game is... Mario Party " + str(randint), file=file)
-
-@bot.command(name="pickn64")
+@bot.slash_command(name="pickn64", description="Selects a random N64 Mario Party game using the wheel.")
 async def pickn64(ctx):
-    randint = random.randint(1,3)
-    file_path = gamesIMG[randint]
+    """Selects a random N64 Mario Party game using the wheel."""
+    game_names = [f"Mario Party {i}" for i in range(1, 4)]
+    selected, gif_io, _ = generate_wheel_gif(ctx, game_names)
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=game_names,
+        title="🎮 N64 Mario Party Game Selected!",
+        description="N64 Mario Party game",
+        image_path=f"assets/MP{int(selected.split()[-1])}.png",
+        filename=f"MP{int(selected.split()[-1])}.png"
+    )
 
-    match randint:
-        case 1:
-            file = discord.File(file_path, filename="MP1.png")
-            await ctx.send("## The Selected Game is... Mario Party " + str(randint), file=file)
-        case 2:
-            file = discord.File(file_path, filename="MP2.png")
-            await ctx.send("## The Selected Game is... Mario Party " + str(randint), file=file)
-        case 3:
-            file = discord.File(file_path, filename="MP3.png")
-            await ctx.send("## The Selected Game is... Mario Party " + str(randint), file=file)
-
-@bot.command(name="picknormalgamemode")
+# Game mode commands
+@bot.slash_command(name="picknormalgamemode", description="Selects a random normal game mode using the wheel.")
 async def picknormalgamemode(ctx):
-    randint = random.randint(1,3)
+    """Selects a random normal game mode using the wheel."""
+    normalgamemode = ["Mario Party: Magic Conch", "Mario Party: Simon Says", "Mario Party: Raiders Wrath", "Mario Party: Inversal Reversal"]
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=list(normalgamemode.values()),
+        title="🎯 Normal Game Mode Selected!",
+        description="normal game mode"
+    )
 
-    if randint == 1:
-        selection = normalgamemode[1]
-        await ctx.send("## The Selected Normal Game Mode is... " + selection)
-    elif randint == 2:
-        selection = normalgamemode[2]
-        await ctx.send("## The Selected Normal Game Mode is... " + selection)
-    else:
-        selection = normalgamemode[3]
-        await ctx.send("## The Selected Normal Game Mode is... " + selection)
-
-@bot.command(name="pickmayhemgamemode")
+@bot.slash_command(name="pickmayhemgamemode", description="Selects a random mayhem game mode using the wheel.")
 async def pickmayhemgamemode(ctx):
-    randint = random.randint(1,6)
-    if randint == 1:    
-        selection = mayhemgamemode[1]
-        await ctx.send("## The Selected Mayhem Game Mode is... " + selection)
-    elif randint == 2:
-        selection = mayhemgamemode[2]
-        await ctx.send("## The Selected Mayhem Game Mode is... " + selection)
-    elif randint == 3:
-        selection = mayhemgamemode[3]
-        await ctx.send("## The Selected Mayhem Game Mode is... " + selection)
-    elif randint == 4:
-        selection = mayhemgamemode[4]
-        await ctx.send("## The Selected Mayhem Game Mode is... " + selection)
-    elif randint == 5:
-        selection = mayhemgamemode[5]
-        await ctx.send("## The Selected Mayhem Game Mode is... " + selection)
-    else:
-        selection = mayhemgamemode[6]
-        await ctx.send("## The Selected Mayhem Game Mode is... " + selection)
+    """Selects a random mayhem game mode using the wheel."""
+    mayhemgamemode = ["Mario Party Mayhem: Classic", "Mario Party Mayhem: Modern", "Mario Party Mayhem: Magic Conch", "Mario Party Mayhem: Mayhem Says", "Mario Party Mayhem: Raiders Wrath", "Mario Party Mayhem: Inversal Reversal"]
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=list(mayhemgamemode.values()),
+        title="🎯 Mayhem Game Mode Selected!",
+        description="mayhem game mode"
+    )
 
-@bot.command(name="pickMP4mode")
+@bot.slash_command(name="pickmp4mode", description="Selects a random Mario Party 4 version using the wheel.")
 async def pickMP4mode(ctx):
-    randint = random.randint(1,2)
+    """Selects a random Mario Party 4 version using the wheel."""
+    mp4_versions = ["Vanilla", "DX"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, mp4_versions)
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=mp4_versions,
+        title="🎯 Mario Party 4 Version Selected!",
+        description="MP4 version"
+    )
 
-    if randint == 1:
-        
-        await ctx.send("## The Selected Mario Party 4 Version is... Vanilla")
-    elif randint == 2:
-        await ctx.send("## The Selected Mario Party 4 Version is... DX")
-
-@bot.command(name="bonusstars")
-async def bstars(ctx):
-    randint = random.randint(1,3)
-
-    if randint == 1:
-        
-        await ctx.send("## Bonus Stars Will Be... Off")
-    elif randint == 2:
-        await ctx.send("## Bonus Stars Will Be... On")
-    else:
-        await ctx.send("## Bonus Stars Will Be... Ztars")
-
-@bot.command(name="duels")
-async def duels(ctx):
-    randint = random.randint(1,3)
-
-    if randint == 1:
-        await ctx.send("## Same Space Duels is set to... Always")
-    elif randint == 2:
-        await ctx.send("## Same Space Duels is set to... Vanilla")
-    else:
-        await ctx.send("## Same Space Duels is set to... Never")
-
-@bot.command(name="gentlemans")
-async def gentlemans(ctx):
-    randint = random.randint(1,2)
-
-    if randint == 1:
-        await ctx.send("## Gentleman's Rule is set to... On")
-    else:
-        await ctx.send("## Gentleman's Rule is set to... Off")
-
-@bot.command(name="pickMPmode")
+@bot.slash_command(name="pickmpmode", description="Selects a random Mario Party mode using the wheel.")
 async def pickMPmode(ctx):
-    randint = random.randint(1,2)
+    """Selects a random Mario Party mode using the wheel."""
+    mp_modes = ["Vanilla", "Mayhem"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, mp_modes)
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=mp_modes,
+        title="🎮 Mario Party Mode Selected!",
+        description="Mario Party mode"
+    )
 
-    if randint == 1:
-        await ctx.send("## The Game Mode Selected is... Vanilla")
-    else:
-        await ctx.send("## The Game Mode Selected is... Mayhem")
+# Settings commands
+@bot.slash_command(name="bonusstars", description="Selects a random bonus stars setting using the wheel.")
+async def bstars(ctx):
+    """Selects a random bonus stars setting using the wheel."""
+    bonus_options = ["Off", "On", "Ztars"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, bonus_options)
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=bonus_options,
+        title="⭐ Bonus Stars Setting Selected!",
+        description="bonus stars setting"
+    )
 
-@bot.command(name="commands")
+@bot.slash_command(name="duels", description="Selects a random duels setting using the wheel.")
+async def duels(ctx):
+    """Selects a random duels setting using the wheel."""
+    duels_options = ["Always", "Vanilla", "Never"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, duels_options)
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=duels_options,
+        title="⚔️ Same Space Duels Setting Selected!",
+        description="duels setting"
+    )
+
+@bot.slash_command(name="gentlemans", description="Selects a random gentleman's rule setting using the wheel.")
+async def gentlemans(ctx):
+    """Selects a random gentleman's rule setting using the wheel."""
+    gentleman_options = ["On", "Off"]
+    selected, gif_io, _ = generate_wheel_gif(ctx, gentleman_options)
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=gentleman_options,
+        title="🎩 Gentleman's Rule Setting Selected!",
+        description="gentleman's rule setting"
+    )
+
+# Utility commands
+@bot.slash_command(name="commands", description="Shows the list of available commands.")
 async def commands(ctx):
-    commandsString = ""
+    """Shows the list of available commands."""
+    commands_string = "\n".join(get_commands_list())
+    await ctx.respond("## Here's The List of Commands!")
+    await ctx.respond(commands_string)
 
-    for _command in commandsList:
-        commandsString += _command
-        commandsString += "\n"
+@bot.slash_command(name='wheel', description="Spins a wheel with optional comma-separated arguments to filter options.")
+async def wheel(ctx, args: str = None):
+    """Spins a wheel with optional comma-separated arguments to filter options."""
+    # Parse comma-separated arguments if provided
+    filter_options = []
+    if args:
+        filter_options = [option.strip() for option in args.split(',')]
+        await ctx.respond(f"🎯 Filtering wheel options to: {', '.join(filter_options)}")
 
-    await ctx.send("## Here's The List of Commands!")
-    await ctx.send(commandsString)
+    selected, gif_io, _ = generate_wheel_gif(ctx, filter_options)
+    await spin_wheel_and_show_result(
+        ctx=ctx,
+        options=filter_options,
+        title=f"🎉 The wheel landed on: {selected}!",
+        description="wheel selection"
+    )
 
-bot.run(token, log_handler=handler, log_level=logging.DEBUG)
+bot.run(TOKEN)
